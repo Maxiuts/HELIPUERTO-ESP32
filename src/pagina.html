@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dome Control Station</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<nav class="navbar">
+<div class="logo">🏛️ DOME CONTROL</div>
+<div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+</nav>
+<div class="sidebar" id="sidebar">
+<div class="sidebar-header">
+<div><div class="sidebar-title">Datos en Tiempo Real</div><div class="sidebar-subtitle">Monitoreo ESP32</div></div>
+<div class="close-btn" id="closeBtn">✕</div>
+</div>
+<div class="menu-section">
+<div class="menu-section-title">📊 Variables Actuales</div>
+<div class="menu-item"><div class="menu-item-header"><div class="menu-item-icon">🌡️</div><div class="menu-item-label">Temperatura</div></div><div class="menu-item-value">24.5°C</div></div>
+<div class="menu-item"><div class="menu-item-header"><div class="menu-item-icon">💧</div><div class="menu-item-label">Humedad</div></div><div class="menu-item-value">65%</div></div>
+</div>
+<div class="menu-section">
+<div class="menu-section-title">💡 Sensores</div>
+<div class="menu-item"><div class="menu-item-header"><div class="menu-item-icon">☀️</div><div class="menu-item-label">Sensor de Luz</div></div><div class="menu-item-value" id="sideLight">750 lux</div></div>
+<div class="menu-item"><div class="menu-item-header"><div class="menu-item-icon">👁️</div><div class="menu-item-label">Sensor PIR</div></div><div class="menu-item-value" id="sidePir" style="color:#22c55e">Sin Movimiento</div></div>
+<div class="menu-item"><div class="menu-item-header"><div class="menu-item-icon">🌧️</div><div class="menu-item-label">Sensor Lluvia</div></div><div class="menu-item-value" id="sideRain" style="color:#22c55e">Sin Lluvia</div></div>
+</div>
+<div class="menu-section">
+<div class="menu-section-title">📈 Estadísticas</div>
+<div class="menu-item"><div class="menu-item-header"><div class="menu-item-icon">🔺</div><div class="menu-item-label">Temp. Máxima</div></div><div class="menu-item-value">26.8°C</div></div>
+<div class="menu-item"><div class="menu-item-header"><div class="menu-item-icon">🔻</div><div class="menu-item-label">Temp. Mínima</div></div><div class="menu-item-value">21.2°C</div></div>
+</div>
+<div class="menu-section">
+<div class="menu-section-title">🔧 Mantenimiento</div>
+<div class="menu-item" onclick="showMaintenanceLogin()" style="cursor:pointer">
+<div class="menu-item-header"><div class="menu-item-icon">🔒</div><div class="menu-item-label">Control Manual</div></div>
+<div style="font-size:12px;color:#64748b;margin-left:32px">Requiere código</div>
+</div>
+</div>
+</div>
+<div class="container">
+<div class="header"><h1>Dome Control Station</h1><p>Environmental monitoring & dome automation</p></div>
+
+<div class="camera-section">
+<div class="section-header"><div class="section-title">📹 Camera Feed</div><div class="status-badge"><span class="status-dot"></span>LIVE</div></div>
+<div class="camera-container">
+<div style="text-align:center;color:#64748b">
+<div style="font-size:64px;margin-bottom:15px">📹</div>
+<div style="font-size:16px;font-weight:600">Camera feed will appear here</div>
+<div style="font-size:13px;margin-top:8px;opacity:0.7">Waiting for stream...</div>
+</div>
+</div>
+</div>
+
+<div class="chart-section">
+<div class="section-header"><div class="section-title">📈 Live Data Stream</div><div class="status-badge"><span class="status-dot"></span>LIVE</div></div>
+<div class="chart-container"><canvas id="weatherChart"></canvas></div>
+</div>
+
+<div class="grid">
+<div class="control-section">
+<h2>🚁 Flight Sequences</h2>
+<div style="display:flex;gap:12px;margin-bottom:15px">
+<button id="takeoffBtn" style="flex:1;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#fff;padding:15px" onclick="startSequence('takeoff')">✈️ TAKEOFF</button>
+<button id="landingBtn" style="flex:1;background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);color:#fff;padding:15px" onclick="startSequence('landing')">🛬 LANDING</button>
+</div>
+<div class="alert alert-info" id="sequenceAlert"></div>
+<div class="sequence-log" id="sequenceLog"></div>
+</div>
+
+<div class="control-section">
+<h2>☀️ Light Sensor</h2>
+<div style="padding:20px">
+<div style="font-size:48px;font-weight:700;color:#fbbf24" id="lightValue">750</div>
+<div style="font-size:14px;color:#64748b;margin-top:5px">lux</div>
+<div style="margin-top:15px;height:8px;background:rgba(251,191,36,0.2);border-radius:10px;overflow:hidden">
+<div id="lightBar" style="height:100%;width:75%;background:linear-gradient(90deg,#fbbf24,#f59e0b);transition:width 0.3s"></div>
+</div>
+</div>
+</div>
+
+<div class="control-section">
+<h2>👁️ Motion Sensor (PIR)</h2>
+<div style="padding:20px">
+<div id="pirIndicator" style="width:80px;height:80px;margin:0 auto;border-radius:50%;background:#22c55e;box-shadow:0 0 20px rgba(34,197,94,0.5);transition:all 0.3s"></div>
+<div id="pirStatus" style="margin-top:15px;font-size:16px;font-weight:600;color:#22c55e">No Motion</div>
+<div style="margin-top:10px;font-size:12px;color:#64748b" id="pirTime">Last: Never</div>
+</div>
+</div>
+</div>
+
+<div class="modal" id="confirmModal">
+<div class="modal-content">
+<div class="modal-title" id="modalTitle"></div>
+<div class="modal-text" id="modalText"></div>
+<div class="modal-buttons">
+<button style="background:#64748b;color:#fff" onclick="closeModal()">Cancel</button>
+<button id="confirmBtn" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff" onclick="confirmSequence()">Confirm</button>
+</div>
+</div>
+</div>
+
+<div class="modal" id="maintenanceModal">
+<div class="modal-content">
+<div class="modal-title">🔒 Maintenance Access</div>
+<div class="modal-text">Enter maintenance code:</div>
+<input type="password" id="maintenanceCode" style="width:100%;padding:12px;border-radius:8px;border:1px solid rgba(99,102,241,0.3);background:rgba(0,0,0,0.3);color:#fff;font-size:16px;text-align:center;margin-bottom:15px" placeholder="****">
+<div class="modal-buttons">
+<button style="background:#64748b;color:#fff" onclick="closeMaintenanceModal()">Cancel</button>
+<button style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff" onclick="checkMaintenanceCode()">Access</button>
+</div>
+</div>
+</div>
+
+<div class="modal" id="maintenancePanel">
+<div class="modal-content" style="max-width:500px">
+<div class="modal-title">🔧 Maintenance Panel</div>
+<div style="margin:20px 0">
+<h3 style="color:#f1f5f9;font-size:14px;margin-bottom:15px">💡 LED Manual Control</h3>
+<div class="buttons" style="margin-bottom:20px">
+<button onclick="maintenanceControl('led','off')">OFF</button>
+<button onclick="maintenanceControl('led','on')">ON</button>
+</div>
+<h3 style="color:#f1f5f9;font-size:14px;margin-bottom:15px">🏛️ Dome Manual Control</h3>
+<div class="buttons">
+<button onclick="maintenanceControl('dome','close')">CLOSE</button>
+<button onclick="maintenanceControl('dome','open')">OPEN</button>
+</div>
+</div>
+<button style="width:100%;background:#64748b;color:#fff;padding:12px" onclick="closeMaintenancePanel()">Exit Maintenance</button>
+</div>
+</div>
+
+</div>
+
+<script>
+const hamburger=document.getElementById('hamburger'),sidebar=document.getElementById('sidebar'),overlay=document.getElementById('overlay'),closeBtn=document.getElementById('closeBtn');
+function toggleMenu(){hamburger.classList.toggle('active');sidebar.classList.toggle('active');overlay.classList.toggle('active')}
+function closeMenu(){hamburger.classList.remove('active');sidebar.classList.remove('active');overlay.classList.remove('active')}
+hamburger.addEventListener('click',toggleMenu);
+overlay.addEventListener('click',closeMenu);
+closeBtn.addEventListener('click',closeMenu);
+
+let currentLight=750;
+let ledState='on';
+let domeState='closed';
+let hasMotion=false;
+let isRaining=false;
+let sequenceType='';
+let sequenceCallback=null;
+const MAINTENANCE_CODE='1234';
+
+function log(msg){
+  const log=document.getElementById('sequenceLog');
+  const time=new Date().toLocaleTimeString();
+  log.innerHTML=`<div>[${time}] ${msg}</div>`+log.innerHTML;
+}
+
+function showAlert(msg,type='info'){
+  const alert=document.getElementById('sequenceAlert');
+  alert.className='alert alert-'+type+' show';
+  alert.textContent=msg;
+  setTimeout(()=>alert.classList.remove('show'),5000);
+}
+
+function startSequence(type){
+  console.log('startSequence called with type:', type);
+  sequenceType=type;
+  const modal=document.getElementById('confirmModal');
+  console.log('Modal element:', modal);
+  const title=document.getElementById('modalTitle');
+  const text=document.getElementById('modalText');
+  
+  if(type==='takeoff'){
+    title.textContent='✈️ Confirm Takeoff Sequence';
+    text.textContent='This will check conditions, enable lights if needed, and open the dome. Continue?';
+  }else{
+    title.textContent='🛬 Confirm Landing Sequence';
+    text.textContent='This will check for motion, close the dome, and adjust lighting. Continue?';
+  }
+  modal.classList.add('show');
+  console.log('Modal should be visible now, classes:', modal.className);
+}
+
+function closeModal(){
+  document.getElementById('confirmModal').classList.remove('show');
+}
+
+function showMaintenanceLogin(){
+  document.getElementById('maintenanceModal').classList.add('show');
+  document.getElementById('maintenanceCode').value='';
+  document.getElementById('maintenanceCode').focus();
+}
+
+function closeMaintenanceModal(){
+  document.getElementById('maintenanceModal').classList.remove('show');
+}
+
+function checkMaintenanceCode(){
+  const code=document.getElementById('maintenanceCode').value;
+  if(code===MAINTENANCE_CODE){
+    closeMaintenanceModal();
+    document.getElementById('maintenancePanel').classList.add('show');
+  }else{
+    showAlert('❌ Invalid code!','danger');
+    document.getElementById('maintenanceCode').value='';
+  }
+}
+
+function closeMaintenancePanel(){
+  document.getElementById('maintenancePanel').classList.remove('show');
+}
+
+function maintenanceControl(device,action){
+  if(device==='led'){
+    setLED(action);
+    log('🔧 Maintenance: LED '+action);
+  }else if(device==='dome'){
+    setDome(action);
+    log('🔧 Maintenance: Dome '+action);
+  }
+  showAlert('✅ Manual control executed','info');
+}
+
+async function confirmSequence(){
+  closeModal();
+  if(sequenceCallback){
+    await sequenceCallback();
+    sequenceCallback=null;
+  }else if(sequenceType==='takeoff'){
+    await takeoffSequence();
+  }else if(sequenceType==='landing'){
+    await landingSequence();
+  }
+}
+
+async function takeoffSequence(){
+  log('✈️ Starting TAKEOFF sequence...');
+  showAlert('✈️ Initiating takeoff sequence...','info');
+  
+  await sleep(1000);
+  log('🌧️ Checking weather conditions...');
+  if(isRaining){
+    log('❌ ABORT: Rain detected!');
+    showAlert('❌ TAKEOFF ABORTED: Weather unsafe!','danger');
+    return;
+  }
+  log('✅ Weather clear');
+  
+  await sleep(1000);
+  log('✅ Checking motion sensor...');
+  if(hasMotion){
+    log('❌ ABORT: Motion detected in area!');
+    showAlert('❌ TAKEOFF ABORTED: Motion detected!','danger');
+    return;
+  }
+  log('✅ Area clear - No motion detected');
+  
+  await sleep(1000);
+  log('✅ Checking light levels...');
+  if(currentLight<200){
+    log('⚠️ Low light detected - Enabling lights...');
+    setLED('on');
+    await sleep(1500);
+    log('✅ Lights enabled');
+    showAlert('⚠️ Low light - Lights auto-enabled','warning');
+  }else if(currentLight<400){
+    log('⚠️ Caution: Low light conditions');
+    showAlert('⚠️ LOW LIGHT - Fly with caution!','warning');
+  }else{
+    log('✅ Light levels optimal');
+  }
+  
+  await sleep(1000);
+  log('🏛️ Opening dome...');
+  setDome('open');
+  await sleep(2000);
+  log('✅ Dome opened');
+  log('✅ TAKEOFF sequence ready - Waiting for departure confirmation');
+  showAlert('✅ Dome open - Ready for takeoff!','info');
+  
+  return new Promise(resolve=>{
+    sequenceCallback=async()=>{
+      log('🏛️ Closing dome after takeoff...');
+      setDome('close');
+      await sleep(2000);
+      log('✅ Dome closed - Takeoff complete');
+      showAlert('✅ Takeoff sequence complete!','info');
+      resolve();
+    };
+    
+    const modal=document.getElementById('confirmModal');
+    const title=document.getElementById('modalTitle');
+    const text=document.getElementById('modalText');
+    title.textContent='✈️ Aircraft Departed?';
+    text.textContent='Confirm that the aircraft has successfully taken off to close the dome.';
+    modal.classList.add('show');
+  });
+}
+
+async function landingSequence(){
+  log('🛬 Starting LANDING sequence...');
+  showAlert('🛬 Initiating landing sequence...','info');
+  
+  await sleep(1000);
+  log('🌧️ Checking weather conditions...');
+  if(isRaining){
+    log('❌ ABORT: Rain detected!');
+    showAlert('❌ LANDING ABORTED: Weather unsafe!','danger');
+    return;
+  }
+  log('✅ Weather clear');
+  
+  await sleep(1000);
+  log('✅ Checking motion sensor...');
+  if(hasMotion){
+    log('❌ ABORT: Motion detected in landing zone!');
+    showAlert('❌ LANDING ABORTED: Area not clear!','danger');
+    return;
+  }
+  log('✅ Landing zone clear');
+  
+  await sleep(1000);
+  log('🏛️ Opening dome for landing...');
+  setDome('open');
+  await sleep(2000);
+  log('✅ Dome opened - Ready for landing');
+  showAlert('✅ Dome open - Ready for landing!','info');
+  
+  return new Promise(resolve=>{
+    sequenceCallback=async()=>{
+      log('🏛️ Closing dome after landing...');
+      setDome('close');
+      await sleep(2000);
+      log('✅ Dome closed');
+      
+      if(currentLight>600){
+        log('✅ Sufficient ambient light - Lights not needed');
+      }
+      
+      log('✅ LANDING sequence complete - Safe to disembark');
+      showAlert('✅ Landing complete!','info');
+      resolve();
+    };
+    
+    const modal=document.getElementById('confirmModal');
+    const title=document.getElementById('modalTitle');
+    const text=document.getElementById('modalText');
+    title.textContent='🛬 Aircraft Landed?';
+    text.textContent='Confirm that the aircraft has successfully landed to close the dome.';
+    modal.classList.add('show');
+  });
+}
+
+function setLED(state){
+  ledState=state;
+  log(`💡 LED ${state}`);
+  fetch('/led/'+state).catch(()=>{});
+}
+
+function setDome(state){
+  domeState=state;
+  log(`🏛️ Dome ${state}`);
+  fetch('/dome/'+state).catch(()=>{});
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+const ctx=document.getElementById('weatherChart').getContext('2d');
+const chart=new Chart(ctx,{type:'line',data:{labels:[],datasets:[{label:'Temperature (°C)',data:[],borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,0.1)',tension:0.4,fill:true,borderWidth:2.5,pointRadius:4,yAxisID:'y'},{label:'Humidity (%)',data:[],borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.1)',tension:0.4,fill:true,borderWidth:2.5,pointRadius:4,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{y:{position:'left',title:{display:true,text:'Temperature (°C)',color:'#6366f1'},ticks:{color:'#6366f1'},grid:{color:'rgba(99,102,241,0.1)'}},y1:{position:'right',title:{display:true,text:'Humidity (%)',color:'#22c55e'},ticks:{color:'#22c55e'},grid:{drawOnChartArea:false}},x:{ticks:{color:'#64748b'}}}}});
+
+setInterval(()=>{
+  const t=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  const temp=(Math.random()*3+23).toFixed(1);
+  const hum=Math.floor(Math.random()*10+60);
+  chart.data.labels.push(t);
+  chart.data.datasets[0].data.push(temp);
+  chart.data.datasets[1].data.push(hum);
+  if(chart.data.labels.length>10){
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+    chart.data.datasets[1].data.shift();
+  }
+  chart.update();
+},5000);
+
+setInterval(()=>{
+  hasMotion=Math.random()>0.7;
+  const indicator=document.getElementById('pirIndicator');
+  const status=document.getElementById('pirStatus');
+  const sidePir=document.getElementById('sidePir');
+  
+  if(hasMotion){
+    indicator.style.background='#ef4444';
+    indicator.style.boxShadow='0 0 30px rgba(239,68,68,0.8)';
+    status.textContent='Motion Detected!';
+    status.style.color='#ef4444';
+    sidePir.textContent='¡Movimiento!';
+    sidePir.style.color='#ef4444';
+    document.getElementById('pirTime').textContent='Last: Just now';
+  }else{
+    indicator.style.background='#22c55e';
+    indicator.style.boxShadow='0 0 20px rgba(34,197,94,0.5)';
+    status.textContent='No Motion';
+    status.style.color='#22c55e';
+    sidePir.textContent='Sin Movimiento';
+    sidePir.style.color='#22c55e';
+  }
+},3000);
+
+setInterval(()=>{
+  const light=Math.floor(Math.random()*1000);
+  currentLight=light;
+  document.getElementById('lightValue').textContent=light;
+  document.getElementById('lightBar').style.width=(light/10)+'%';
+  document.getElementById('sideLight').textContent=light+' lux';
+},2000);
+
+setInterval(()=>{
+  isRaining=Math.random()>0.85;
+  const sideRain=document.getElementById('sideRain');
+  const takeoffBtn=document.getElementById('takeoffBtn');
+  const landingBtn=document.getElementById('landingBtn');
+  
+  if(isRaining){
+    sideRain.textContent='¡LLUVIA!';
+    sideRain.style.color='#ef4444';
+    showAlert('🌧️ RAIN DETECTED - All operations suspended!','danger');
+    takeoffBtn.disabled=true;
+    landingBtn.disabled=true;
+    if(domeState==='open'){
+      log('🌧️ Emergency: Closing dome due to rain');
+      setDome('close');
+    }
+  }else{
+    sideRain.textContent='Sin Lluvia';
+    sideRain.style.color='#22c55e';
+    takeoffBtn.disabled=false;
+    landingBtn.disabled=false;
+  }
+},5000);
+</script>
+</body>
+</html>
