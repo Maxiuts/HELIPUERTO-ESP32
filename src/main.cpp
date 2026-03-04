@@ -1,11 +1,23 @@
 #include <WiFi.h>
 #include <WebServer.h>
+#include <DHT.h>
 
 const char* ssid = "ASUS";
 const char* password = "Max100806";
 
-const int LED = 2;
+#define LED_PIN 2
+#define PIR_PIN 23
+#define LED_OK 18
+#define LED_ERROR 19
+#define DHT_PIN 4
+#define DHT_TYPE DHT11
+
+DHT dht(DHT_PIN, DHT_TYPE);
 WebServer server(80);
+
+unsigned long tiempoParpadeo = 0;
+const unsigned long intervaloParpadeo = 500;
+bool estadoParpadeo = false;
 
 // NOTA: El HTML completo está en src/pagina.html
 // Para actualizar, abre pagina.html en el navegador directamente
@@ -62,25 +74,27 @@ void handleRoot() {
 }
 
 void handleOn() {
-  digitalWrite(LED, HIGH);
+  digitalWrite(LED_PIN, HIGH);
   server.send(200, "text/plain", "LED ON");
 }
 
 void handleOff() {
-  digitalWrite(LED, LOW);
+  digitalWrite(LED_PIN, LOW);
   server.send(200, "text/plain", "LED OFF");
 }
 
 void handleData() {
-  // Aquí irán los datos reales del DHT11
-  // Por ahora datos simulados
-  float temp = random(200, 280) / 10.0;
-  float hum = random(50, 80);
+  float temp = dht.readTemperature();
+  float hum = dht.readHumidity();
+  int pir = digitalRead(PIR_PIN);
+  bool dhtOK = !(isnan(temp) || isnan(hum));
   
-  String json = "{\"temp\":" + String(temp) + 
-                ",\"hum\":" + String(hum) + 
-                ",\"tempMax\":26.8" +
-                ",\"tempMin\":21.2}";
+  String json = "{\"temp\":" + String(dhtOK ? temp : 0) + 
+                ",\"hum\":" + String(dhtOK ? hum : 0) + 
+                ",\"pir\":" + String(pir) + 
+                ",\"light\":" + String(random(0, 1000)) + 
+                ",\"rain\":0" +
+                ",\"dhtOK\":" + String(dhtOK ? "true" : "false") + "}";
   
   server.send(200, "application/json", json);
 }
@@ -90,9 +104,17 @@ void setup() {
   delay(1000);
   
   Serial.println("\n\n=== ESP32 INICIANDO ===");
-  Serial.println("Configurando LED...");
-  pinMode(LED, OUTPUT);
-  digitalWrite(LED, LOW);
+  
+  // Configurar pines
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(PIR_PIN, INPUT);
+  pinMode(LED_OK, OUTPUT);
+  pinMode(LED_ERROR, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+  
+  // Iniciar DHT11
+  dht.begin();
+  Serial.println("DHT11 iniciado");
   
   Serial.println("Conectando a WiFi...");
   Serial.print("SSID: ");
@@ -122,6 +144,8 @@ void setup() {
   server.on("/", handleRoot);
   server.on("/on", handleOn);
   server.on("/off", handleOff);
+  server.on("/led/on", handleOn);
+  server.on("/led/off", handleOff);
   server.on("/data", handleData);
   server.begin();
   Serial.println("Servidor iniciado");
@@ -129,4 +153,23 @@ void setup() {
 
 void loop() {
   server.handleClient();
+  
+  // Leer DHT11
+  float temp = dht.readTemperature();
+  float hum = dht.readHumidity();
+  bool sistemaOK = !(isnan(temp) || isnan(hum));
+  
+  // Control LED OK/ERROR
+  if (sistemaOK) {
+    digitalWrite(LED_ERROR, LOW);
+    // Parpadeo LED OK
+    if (millis() - tiempoParpadeo >= intervaloParpadeo) {
+      tiempoParpadeo = millis();
+      estadoParpadeo = !estadoParpadeo;
+      digitalWrite(LED_OK, estadoParpadeo);
+    }
+  } else {
+    digitalWrite(LED_OK, LOW);
+    digitalWrite(LED_ERROR, HIGH);
+  }
 }
