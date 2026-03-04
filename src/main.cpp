@@ -75,11 +75,13 @@ void handleRoot() {
 
 void handleOn() {
   digitalWrite(LED_PIN, HIGH);
+  server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, "text/plain", "LED ON");
 }
 
 void handleOff() {
   digitalWrite(LED_PIN, LOW);
+  server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, "text/plain", "LED OFF");
 }
 
@@ -96,6 +98,9 @@ void handleData() {
                 ",\"rain\":0" +
                 ",\"dhtOK\":" + String(dhtOK ? "true" : "false") + "}";
   
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  server.sendHeader("Access-Control-Allow-Headers", "Content-Type");
   server.send(200, "application/json", json);
 }
 
