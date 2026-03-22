@@ -122,28 +122,68 @@ void setup() {
   Serial.println("DHT11 iniciado");
   
   Serial.println("Conectando a WiFi...");
+
+  // Forzar modo estación y limpiar estado previo (ayuda con algunas redes/routers)
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect(true, true);
+  delay(200);
+
   Serial.print("SSID: ");
   Serial.println(ssid);
-  
+
+  // Opcional: nombre de host para identificar en el router
+  WiFi.setHostname("HELIPUERTO-ESP32");
+
+  // Mostrar MAC (útil si el router filtra por MAC)
+  Serial.print("MAC: ");
+  Serial.println(WiFi.macAddress());
+
+  // Iniciar conexión
   WiFi.begin(ssid, password);
-  
+
+  // Esperar con diagnóstico
+  const int maxIntentos = 40; // ~20s
   int intentos = 0;
-  while (WiFi.status() != WL_CONNECTED && intentos < 20) {
+  while (WiFi.status() != WL_CONNECTED && intentos < maxIntentos) {
     delay(500);
     Serial.print(".");
     intentos++;
+
+    // Cada ~2.5s imprimir estado
+    if (intentos % 5 == 0) {
+      Serial.print("\nWiFi.status(): ");
+      Serial.println((int)WiFi.status());
+    }
   }
-  
+
+  Serial.println();
+
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\n\n*** CONECTADO A WIFI ***");
+    Serial.println("\n*** CONECTADO A WIFI ***");
     Serial.print("IP: ");
     Serial.println(WiFi.localIP());
+    Serial.print("RSSI: ");
+    Serial.print(WiFi.RSSI());
+    Serial.println(" dBm");
     Serial.print("Abrir en navegador: http://");
     Serial.println(WiFi.localIP());
     Serial.println("========================\n");
   } else {
-    Serial.println("\n\nERROR: No se pudo conectar al WiFi");
-    Serial.println("Verifica SSID y password");
+    Serial.println("\nERROR: No se pudo conectar al WiFi");
+
+    // Diagnóstico rápido de causas comunes:
+    // - SSID/Password incorrectos (WL_CONNECT_FAILED / 4)
+    // - Red en 5GHz (ESP32 solo 2.4GHz)
+    // - Canal 12/13 con región mal configurada en algunos casos
+    // - Filtrado MAC / WPA Enterprise / portal cautivo
+    Serial.print("WiFi.status(): ");
+    Serial.println((int)WiFi.status());
+
+    Serial.println("Tips:");
+    Serial.println("- Asegura que la red sea 2.4GHz (no 5GHz).");
+    Serial.println("- Evita caracteres raros/espacios al inicio o fin en SSID/Password.");
+    Serial.println("- Si el router usa canal 12/13, prueba canal 1-11.");
+    Serial.println("- Revisa filtrado por MAC en el router.");
   }
   
   server.on("/", handleRoot);
