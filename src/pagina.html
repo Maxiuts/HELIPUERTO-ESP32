@@ -10,11 +10,42 @@
 </head>
 <body>
 <div class="overlay" id="overlay"></div>
-<nav class="navbar">
-<div class="logo">🏛️ DOME CONTROL</div>
-<button onclick="changeESP32IP()" style="background:rgba(99,102,241,0.2);border:1px solid #6366f1;color:#6366f1;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">🔧 Change IP</button>
+<div class="dashboard-shell">
+<aside class="rail">
+<div class="rail-brand">
+<div class="rail-logo">H</div>
+<div>
+<div class="rail-title">Helipuerto</div>
+<div class="rail-subtitle">Control Center</div>
+</div>
+</div>
+<div class="rail-stack">
+<div class="rail-chip active">Monitoreo</div>
+<div class="rail-chip">Seguridad</div>
+<div class="rail-chip">Operaciones</div>
+</div>
+<div class="rail-summary">
+<div class="rail-summary-label">ESP32</div>
+<div class="rail-summary-value">Live</div>
+<div class="rail-summary-text">Sensores y automatización conectados al panel.</div>
+</div>
+<button class="rail-action" onclick="changeESP32IP()">Cambiar IP</button>
 <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+</aside>
+
+<main class="workspace">
+<nav class="navbar">
+<div class="navbar-copy">
+<div class="eyebrow">Dashboard operativo</div>
+<div class="logo">Dome Control Station</div>
+<div class="navbar-text">Panel oscuro, reactivo y listo para datos de la ESP32 en tiempo real.</div>
+</div>
+<div class="topbar-actions">
+<div class="topbar-pill">Sistema autónomo</div>
+<div class="topbar-pill muted">Telemetry live</div>
+</div>
 </nav>
+
 <div class="sidebar" id="sidebar">
 <div class="sidebar-header">
 <div><div class="sidebar-title">Datos en Tiempo Real</div><div class="sidebar-subtitle">Monitoreo ESP32</div></div>
@@ -45,52 +76,143 @@
 </div>
 </div>
 <div class="container">
-<div class="header"><h1>Dome Control Station</h1><p>Environmental monitoring & dome automation</p></div>
+<div class="header">
+<div>
+<div class="eyebrow">Centro de mando</div>
+<h1>Automatización del domo y seguridad perimetral</h1>
+<p>Visualiza movimiento, lluvia, luces, cámara y autorización de despegue en una sola vista.</p>
+</div>
+<div class="header-badge">
+<span class="header-badge-dot"></span>
+Control en tiempo real
+</div>
+</div>
 
-<div class="camera-section">
-<div class="section-header"><div class="section-title">📹 Camera Feed</div><div class="status-badge"><span class="status-dot"></span>LIVE</div></div>
+<div class="system-grid">
+<div class="system-card">
+<div class="system-label">Estado general</div>
+<div class="system-value system-ok" id="systemHealth">Operativo</div>
+<div class="system-meta" id="systemMeta">Esperando lectura de sensores</div>
+</div>
+<div class="system-card">
+<div class="system-label">Clima</div>
+<div class="system-value system-ok" id="rainStatus">Sin lluvia</div>
+<div class="system-meta" id="rainMeta">Domo protegido</div>
+</div>
+<div class="system-card">
+<div class="system-label">Iluminación</div>
+<div class="system-value system-info" id="nightStatus">Día</div>
+<div class="system-meta" id="nightMeta">Luces en espera</div>
+</div>
+<div class="system-card">
+<div class="system-label">Movimiento</div>
+<div class="system-value system-ok" id="motionStatus">Zona libre</div>
+<div class="system-meta" id="motionMeta">Monitoreo activo</div>
+</div>
+<div class="system-card">
+<div class="system-label">Cámara</div>
+<div class="system-value system-info" id="cameraStatus">En espera</div>
+<div class="system-meta" id="cameraMeta">Se activará por movimiento</div>
+</div>
+<div class="system-card">
+<div class="system-label">Permiso de despegue</div>
+<div class="system-value system-warn" id="clearanceStatus">Pendiente</div>
+<div class="system-meta" id="clearanceMeta">Validando condiciones</div>
+</div>
+</div>
+
+<div class="hero-grid">
+<section class="camera-section">
+<div class="section-header"><div class="section-title">📹 Vigilancia inteligente</div><div class="status-badge"><span class="status-dot"></span>LIVE</div></div>
 <div class="camera-container">
-<div style="text-align:center;color:#64748b">
-<div style="font-size:64px;margin-bottom:15px">📹</div>
-<div style="font-size:16px;font-weight:600">Camera feed will appear here</div>
-<div style="font-size:13px;margin-top:8px;opacity:0.7">Waiting for stream...</div>
+<img id="cameraStream" alt="Camera stream" style="display:none;width:100%;height:100%;object-fit:cover">
+<div id="cameraPlaceholder" class="camera-placeholder">
+<div class="camera-icon">📹</div>
+<div class="camera-title">Camera feed will appear here</div>
+<div class="camera-subtitle" id="cameraHint">Waiting for stream...</div>
 </div>
 </div>
+<div class="camera-footer">
+<div class="mini-stat">
+<span class="mini-stat-label">Estado</span>
+<span class="mini-stat-value" id="cameraFooterState">Monitor</span>
 </div>
+<div class="mini-stat">
+<span class="mini-stat-label">Respuesta</span>
+<span class="mini-stat-value">Automática</span>
+</div>
+</div>
+</section>
 
-<div class="chart-section">
-<div class="section-header"><div class="section-title">📈 Live Data Stream</div><div class="status-badge"><span class="status-dot"></span>LIVE</div></div>
+<section class="chart-section telemetry-card">
+<div class="section-header"><div class="section-title">📈 Telemetría ambiental</div><div class="status-badge"><span class="status-dot"></span>LIVE</div></div>
+<div class="telemetry-copy">
+<div class="telemetry-headline">Tendencias térmicas y humedad del entorno</div>
+<div class="telemetry-text">Seguimiento continuo para validar estabilidad operativa antes de maniobras.</div>
+</div>
 <div class="chart-container"><canvas id="weatherChart"></canvas></div>
+</section>
 </div>
 
 <div class="grid">
-<div class="control-section">
+<div class="control-section control-panel">
+<div class="card-topline">Secuencias</div>
 <h2>🚁 Flight Sequences</h2>
-<div style="display:flex;gap:12px;margin-bottom:15px">
-<button id="takeoffBtn" style="flex:1;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#fff;padding:15px" onclick="startSequence('takeoff')">✈️ TAKEOFF</button>
-<button id="landingBtn" style="flex:1;background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);color:#fff;padding:15px" onclick="startSequence('landing')">🛬 LANDING</button>
+<p class="card-copy">Ejecuta maniobras seguras con validaciones automáticas de clima, movimiento y luces.</p>
+<div class="action-row">
+<button id="takeoffBtn" class="action-button action-button-primary" onclick="startSequence('takeoff')">✈️ Takeoff</button>
+<button id="landingBtn" class="action-button action-button-danger" onclick="startSequence('landing')">🛬 Landing</button>
 </div>
 <div class="alert alert-info" id="sequenceAlert"></div>
 <div class="sequence-log" id="sequenceLog"></div>
 </div>
 
-<div class="control-section">
+<div class="control-section metric-panel">
+<div class="card-topline">Iluminación</div>
 <h2>☀️ Light Sensor</h2>
-<div style="padding:20px">
-<div style="font-size:48px;font-weight:700;color:#fbbf24" id="lightValue">750</div>
-<div style="font-size:14px;color:#64748b;margin-top:5px">lux</div>
-<div style="margin-top:15px;height:8px;background:rgba(251,191,36,0.2);border-radius:10px;overflow:hidden">
-<div id="lightBar" style="height:100%;width:75%;background:linear-gradient(90deg,#fbbf24,#f59e0b);transition:width 0.3s"></div>
+<div class="metric-box">
+<div class="metric-value" id="lightValue">750</div>
+<div class="metric-unit">lux</div>
 </div>
+<div class="meter">
+<div id="lightBar" class="meter-bar"></div>
 </div>
+<div class="card-copy">Si la lectura baja al umbral nocturno, el sistema enciende las luces de forma automática.</div>
 </div>
 
-<div class="control-section">
+<div class="control-section motion-panel">
+<div class="card-topline">Perímetro</div>
 <h2>👁️ Motion Sensor (PIR)</h2>
-<div style="padding:20px">
-<div id="pirIndicator" style="width:80px;height:80px;margin:0 auto;border-radius:50%;background:#22c55e;box-shadow:0 0 20px rgba(34,197,94,0.5);transition:all 0.3s"></div>
-<div id="pirStatus" style="margin-top:15px;font-size:16px;font-weight:600;color:#22c55e">No Motion</div>
-<div style="margin-top:10px;font-size:12px;color:#64748b" id="pirTime">Last: Never</div>
+<div class="motion-layout">
+<div id="pirIndicator" class="pir-indicator"></div>
+<div>
+<div id="pirStatus" class="motion-title">No Motion</div>
+<div id="pirTime" class="motion-time">Last: Never</div>
+</div>
+</div>
+<div class="card-copy">Al detectar presencia, se activa la cámara y se emite una alerta sonora local.</div>
+</div>
+
+<div class="control-section quick-panel">
+<div class="card-topline">Resumen</div>
+<h2>⚡ Respuesta automática</h2>
+<div class="quick-list">
+<div class="quick-item">
+<span>Lluvia</span>
+<strong>Cerrar domo</strong>
+</div>
+<div class="quick-item">
+<span>Noche</span>
+<strong>Prender luces</strong>
+</div>
+<div class="quick-item">
+<span>Movimiento</span>
+<strong>Cámara + alerta</strong>
+</div>
+<div class="quick-item">
+<span>Todo OK</span>
+<strong>Permitir despegue</strong>
+</div>
 </div>
 </div>
 </div>
@@ -137,6 +259,7 @@
 </div>
 </div>
 
+</main>
 </div>
 
 <script>
@@ -152,9 +275,26 @@ let ledState='on';
 let domeState='closed';
 let hasMotion=false;
 let isRaining=false;
+let isNight=false;
+let cameraActive=false;
+let systemError=false;
+let lastMotionTimestamp='Never';
 let sequenceType='';
 let sequenceCallback=null;
 const MAINTENANCE_CODE='1234';
+const NIGHT_LIGHT_THRESHOLD=250;
+const CAUTION_LIGHT_THRESHOLD=400;
+const MOTION_SOUND_COOLDOWN=5000;
+const AUTO_CAMERA_TIMEOUT=20000;
+const stateTracker={
+  hasFetched:false,
+  motion:false,
+  rain:false,
+  night:false,
+  error:false,
+  motionSoundAt:0,
+  cameraTimer:null
+};
 
 function log(msg){
   const log=document.getElementById('sequenceLog');
@@ -167,6 +307,103 @@ function showAlert(msg,type='info'){
   alert.className='alert alert-'+type+' show';
   alert.textContent=msg;
   setTimeout(()=>alert.classList.remove('show'),5000);
+}
+
+function setStatus(id,text,variant){
+  const el=document.getElementById(id);
+  el.textContent=text;
+  el.className='system-value system-'+variant;
+}
+
+function updateSystemMeta(id,text){
+  document.getElementById(id).textContent=text;
+}
+
+function playMotionAlert(){
+  const now=Date.now();
+  if(now-stateTracker.motionSoundAt<MOTION_SOUND_COOLDOWN) return;
+  stateTracker.motionSoundAt=now;
+  const AudioCtx=window.AudioContext||window.webkitAudioContext;
+  if(!AudioCtx) return;
+  const ctx=new AudioCtx();
+  const oscillator=ctx.createOscillator();
+  const gain=ctx.createGain();
+  oscillator.type='sawtooth';
+  oscillator.frequency.setValueAtTime(880,ctx.currentTime);
+  oscillator.frequency.exponentialRampToValueAtTime(440,ctx.currentTime+0.35);
+  gain.gain.setValueAtTime(0.0001,ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.08,ctx.currentTime+0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.45);
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+  oscillator.start();
+  oscillator.stop(ctx.currentTime+0.45);
+  oscillator.onended=()=>ctx.close().catch(()=>{});
+}
+
+function activateCamera(reason='Monitoring area'){
+  cameraActive=true;
+  setStatus('cameraStatus','Activa','alert');
+  updateSystemMeta('cameraMeta',reason);
+  document.getElementById('cameraHint').textContent=reason;
+  document.getElementById('cameraFooterState').textContent='Activa';
+  const stream=document.getElementById('cameraStream');
+  if(stream.dataset.bound!=='true'){
+    stream.src=`${API_BASE}/stream`;
+    stream.dataset.bound='true';
+    stream.onerror=()=>{
+      stream.style.display='none';
+      document.getElementById('cameraPlaceholder').style.display='block';
+      updateSystemMeta('cameraMeta','Sin stream disponible en /stream');
+    };
+    stream.onload=()=>{
+      stream.style.display='block';
+      document.getElementById('cameraPlaceholder').style.display='none';
+    };
+  }
+  clearTimeout(stateTracker.cameraTimer);
+  stateTracker.cameraTimer=setTimeout(()=>{
+    if(!hasMotion){
+      cameraActive=false;
+      setStatus('cameraStatus','En espera','info');
+      updateSystemMeta('cameraMeta','Se activará por movimiento');
+      document.getElementById('cameraHint').textContent='Waiting for stream...';
+      document.getElementById('cameraFooterState').textContent='Monitor';
+      if(stream.style.display!=='none'){
+        stream.style.display='none';
+        document.getElementById('cameraPlaceholder').style.display='block';
+      }
+    }
+  },AUTO_CAMERA_TIMEOUT);
+}
+
+function evaluateClearance(){
+  const ready=!systemError&&!isRaining&&!hasMotion;
+  const takeoffBtn=document.getElementById('takeoffBtn');
+  takeoffBtn.disabled=!ready;
+  if(ready){
+    setStatus('clearanceStatus','Autorizado','ok');
+    updateSystemMeta('clearanceMeta','Todo OK: se permite despegue');
+  }else if(systemError){
+    setStatus('clearanceStatus','Bloqueado','alert');
+    updateSystemMeta('clearanceMeta','Hay errores de sensores o comunicación');
+  }else if(isRaining){
+    setStatus('clearanceStatus','Bloqueado','alert');
+    updateSystemMeta('clearanceMeta','Lluvia detectada: despegue cancelado');
+  }else{
+    setStatus('clearanceStatus','En espera','warn');
+    updateSystemMeta('clearanceMeta','Movimiento detectado: área no despejada');
+  }
+}
+
+function handleSensorError(message){
+  systemError=true;
+  setStatus('systemHealth','Error','alert');
+  updateSystemMeta('systemMeta',message);
+  setStatus('cameraStatus','En espera','info');
+  updateSystemMeta('cameraMeta','Pendiente de datos confiables');
+  document.getElementById('cameraFooterState').textContent='Sin datos';
+  evaluateClearance();
 }
 
 function startSequence(type){
@@ -264,13 +501,13 @@ async function takeoffSequence(){
   
   await sleep(1000);
   log('✅ Checking light levels...');
-  if(currentLight<200){
+  if(currentLight<NIGHT_LIGHT_THRESHOLD){
     log('⚠️ Low light detected - Enabling lights...');
     setLED('on');
     await sleep(1500);
     log('✅ Lights enabled');
     showAlert('⚠️ Low light - Lights auto-enabled','warning');
-  }else if(currentLight<400){
+  }else if(currentLight<CAUTION_LIGHT_THRESHOLD){
     log('⚠️ Caution: Low light conditions');
     showAlert('⚠️ LOW LIGHT - Fly with caution!','warning');
   }else{
@@ -375,76 +612,150 @@ function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 const ctx=document.getElementById('weatherChart').getContext('2d');
 const chart=new Chart(ctx,{type:'line',data:{labels:[],datasets:[{label:'Temperature (°C)',data:[],borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,0.1)',tension:0.4,fill:true,borderWidth:2.5,pointRadius:4,yAxisID:'y'},{label:'Humidity (%)',data:[],borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.1)',tension:0.4,fill:true,borderWidth:2.5,pointRadius:4,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{y:{position:'left',title:{display:true,text:'Temperature (°C)',color:'#6366f1'},ticks:{color:'#6366f1'},grid:{color:'rgba(99,102,241,0.1)'}},y1:{position:'right',title:{display:true,text:'Humidity (%)',color:'#22c55e'},ticks:{color:'#22c55e'},grid:{drawOnChartArea:false}},x:{ticks:{color:'#64748b'}}}}});
 
-setInterval(()=>{
+function processSensorData(data){
+  const tempOk=Number.isFinite(data.temp);
+  const humOk=Number.isFinite(data.hum);
+  const lightOk=Number.isFinite(data.light);
+  const dhtOk=data.dhtOK!==false&&tempOk&&humOk;
+
+  if(!dhtOk||!lightOk){
+    handleSensorError('Lecturas incompletas desde la ESP32');
+    if(!stateTracker.error){
+      log('❌ Sensor error detected');
+      showAlert('❌ Error de sensores: revisar ESP32/DHT','danger');
+    }
+    stateTracker.error=true;
+  }else{
+    systemError=false;
+    stateTracker.error=false;
+    setStatus('systemHealth','Operativo','ok');
+    updateSystemMeta('systemMeta',`Temp ${data.temp.toFixed(1)}°C · Humedad ${data.hum.toFixed(1)}%`);
+    if(!cameraActive){
+      document.getElementById('cameraFooterState').textContent='Monitor';
+    }
+  }
+
+  // Actualizar gráfico
+  const t=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  chart.data.labels.push(t);
+  chart.data.datasets[0].data.push(tempOk?data.temp:null);
+  chart.data.datasets[1].data.push(humOk?data.hum:null);
+  if(chart.data.labels.length>10){
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+    chart.data.datasets[1].data.shift();
+  }
+  chart.update();
+
+  // Actualizar PIR y alertas
+  hasMotion=Number(data.pir)===1;
+  const indicator=document.getElementById('pirIndicator');
+  const status=document.getElementById('pirStatus');
+  const sidePir=document.getElementById('sidePir');
+  if(hasMotion){
+    lastMotionTimestamp=new Date().toLocaleTimeString('es-ES');
+    indicator.style.background='#ef4444';
+    indicator.style.boxShadow='0 0 30px rgba(239,68,68,0.8)';
+    status.textContent='Motion Detected!';
+    status.style.color='#ef4444';
+    sidePir.textContent='¡Movimiento!';
+    sidePir.style.color='#ef4444';
+    document.getElementById('pirTime').textContent='Last: Just now';
+    setStatus('motionStatus','Alerta','alert');
+    updateSystemMeta('motionMeta','Movimiento detectado cerca del helipuerto');
+    if(!stateTracker.motion){
+      log('🚨 Motion detected - activating camera and alert');
+      showAlert('🚨 Movimiento detectado: cámara activada','danger');
+      playMotionAlert();
+    }
+    activateCamera('Movimiento detectado: vigilancia reforzada');
+  }else{
+    indicator.style.background='#22c55e';
+    indicator.style.boxShadow='0 0 20px rgba(34,197,94,0.5)';
+    status.textContent='No Motion';
+    status.style.color='#22c55e';
+    sidePir.textContent='Sin Movimiento';
+    sidePir.style.color='#22c55e';
+    document.getElementById('pirTime').textContent=`Last: ${lastMotionTimestamp}`;
+    setStatus('motionStatus','Zona libre','ok');
+    updateSystemMeta('motionMeta','No hay personas cerca');
+  }
+
+  // Actualizar luz y modo noche
+  currentLight=Number(data.light)||0;
+  document.getElementById('lightValue').textContent=currentLight;
+  document.getElementById('lightBar').style.width=Math.min(currentLight/10,100)+'%';
+  document.getElementById('sideLight').textContent=currentLight+' lux';
+  isNight=currentLight<=NIGHT_LIGHT_THRESHOLD;
+  if(isNight){
+    setStatus('nightStatus','Noche','warn');
+    updateSystemMeta('nightMeta','Luces automáticas activadas');
+    if(ledState!=='on'){
+      log('🌙 Night mode detected - turning on lights');
+      setLED('on');
+      showAlert('🌙 Es de noche: luces encendidas automáticamente','warning');
+    }
+  }else{
+    setStatus('nightStatus','Día','info');
+    updateSystemMeta('nightMeta',ledState==='on'?'Luces disponibles':'Luces en espera');
+  }
+
+  // Actualizar lluvia y cierre automático
+  isRaining=Number(data.rain)===1;
+  const sideRain=document.getElementById('sideRain');
+  const landingBtn=document.getElementById('landingBtn');
+  if(isRaining){
+    sideRain.textContent='¡LLUVIA!';
+    sideRain.style.color='#ef4444';
+    landingBtn.disabled=true;
+    setStatus('rainStatus','Lluvia','alert');
+    updateSystemMeta('rainMeta','Domo cerrándose automáticamente');
+    if(!stateTracker.rain){
+      log('🌧️ Rain detected - closing dome');
+      showAlert('🌧️ Lluvia detectada: domo cerrándose','danger');
+    }
+    if(domeState==='open'){
+      setDome('close');
+    }
+  }else{
+    sideRain.textContent='Sin Lluvia';
+    sideRain.style.color='#22c55e';
+    landingBtn.disabled=false;
+    setStatus('rainStatus','Sin lluvia','ok');
+    updateSystemMeta('rainMeta','Operación exterior habilitada');
+  }
+
+  evaluateClearance();
+
+  stateTracker.motion=hasMotion;
+  stateTracker.rain=isRaining;
+  stateTracker.night=isNight;
+  stateTracker.hasFetched=true;
+}
+
+function pollSensors(){
   fetch(`${API_BASE}/data`)
     .then(r=>r.json())
     .then(data=>{
-      // Actualizar gráfico
-      const t=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-      chart.data.labels.push(t);
-      chart.data.datasets[0].data.push(data.temp);
-      chart.data.datasets[1].data.push(data.hum);
-      if(chart.data.labels.length>10){
-        chart.data.labels.shift();
-        chart.data.datasets[0].data.shift();
-        chart.data.datasets[1].data.shift();
-      }
-      chart.update();
-      
-      // Actualizar PIR
-      hasMotion=data.pir===1;
-      const indicator=document.getElementById('pirIndicator');
-      const status=document.getElementById('pirStatus');
-      const sidePir=document.getElementById('sidePir');
-      
-      if(hasMotion){
-        indicator.style.background='#ef4444';
-        indicator.style.boxShadow='0 0 30px rgba(239,68,68,0.8)';
-        status.textContent='Motion Detected!';
-        status.style.color='#ef4444';
-        sidePir.textContent='¡Movimiento!';
-        sidePir.style.color='#ef4444';
-        document.getElementById('pirTime').textContent='Last: Just now';
-      }else{
-        indicator.style.background='#22c55e';
-        indicator.style.boxShadow='0 0 20px rgba(34,197,94,0.5)';
-        status.textContent='No Motion';
-        status.style.color='#22c55e';
-        sidePir.textContent='Sin Movimiento';
-        sidePir.style.color='#22c55e';
-      }
-      
-      // Actualizar luz
-      currentLight=data.light;
-      document.getElementById('lightValue').textContent=data.light;
-      document.getElementById('lightBar').style.width=(data.light/10)+'%';
-      document.getElementById('sideLight').textContent=data.light+' lux';
-      
-      // Actualizar lluvia
-      isRaining=data.rain===1;
-      const sideRain=document.getElementById('sideRain');
-      const takeoffBtn=document.getElementById('takeoffBtn');
-      const landingBtn=document.getElementById('landingBtn');
-      
-      if(isRaining){
-        sideRain.textContent='¡LLUVIA!';
-        sideRain.style.color='#ef4444';
-        showAlert('🌧️ RAIN DETECTED - All operations suspended!','danger');
-        takeoffBtn.disabled=true;
-        landingBtn.disabled=true;
-        if(domeState==='open'){
-          log('🌧️ Emergency: Closing dome due to rain');
-          setDome('close');
-        }
-      }else{
-        sideRain.textContent='Sin Lluvia';
-        sideRain.style.color='#22c55e';
-        takeoffBtn.disabled=false;
-        landingBtn.disabled=false;
+      const hadError=stateTracker.error;
+      processSensorData(data);
+      if(hadError&&!stateTracker.error){
+        log('✅ Communication restored');
+        showAlert('✅ Comunicación con la ESP32 restablecida','info');
       }
     })
-    .catch(()=>console.log('Error fetching data'));
-},2000);
+    .catch(()=>{
+      console.log('Error fetching data');
+      handleSensorError('Sin comunicación con la ESP32');
+      if(stateTracker.hasFetched&&!stateTracker.error){
+        showAlert('❌ Comunicación perdida con la ESP32','danger');
+      }
+      stateTracker.error=true;
+    });
+}
+
+pollSensors();
+setInterval(pollSensors,2000);
 </script>
 </body>
 </html>
